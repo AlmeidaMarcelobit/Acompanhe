@@ -1,6 +1,6 @@
 # Acompanhe
 
-Catálogo de filmes e séries com HTML, CSS e JavaScript, sem build. A página inicial busca títulos em APIs e exibe episódios agrupados por temporada.
+Catálogo de filmes e séries com HTML, CSS e JavaScript. O desenvolvimento no XAMPP dispensa build; a publicação no Netlify usa npm run build. A página inicial busca títulos em APIs e exibe episódios agrupados por temporada.
 
 ## Como rodar
 
@@ -33,14 +33,14 @@ src/
       index.js
 ```
 
-Pastas usam nomes sem acentos para facilitar caminhos e publicação. scripts/vendor fica reservado para bibliotecas de terceiros quando necessárias. As imagens, estilos e página estática antigos foram preservados; a inicial usa a estrutura acima.
+Pastas usam nomes sem acentos para facilitar caminhos e publicação. scripts/vendor fica reservado para bibliotecas de terceiros quando necessárias. As imagens e os estilos antigos foram preservados; a página estática de detalhes foi substituída pelo diálogo do catálogo. A inicial usa a estrutura acima.
 
 ## APIs
 
 - [TVmaze](https://www.tvmaze.com/api): séries e episódios, sem chave, com CORS. Dados sob CC BY-SA; mantenha a atribuição e observe a licença ao reutilizar dados.
 - [SampleAPIs](https://www.sampleapis.com/api-list/movies): catálogo de demonstração de filmes de ação e aventura, sem chave. Busca local nos títulos retornados, em idioma original; sem ano ou sinopse. Link para IMDb quando disponível.
 
-Os nomes dos episódios seguem o idioma da fonte, frequentemente inglês. O catálogo de filmes é limitado à coleção de demonstração de ação e aventura, não é uma base completa ou garantia de lançamentos atuais. Erros e resultados vazios são tratados na interface; consultas com falha oferecem nova tentativa. Nenhuma credencial é armazenada.
+Os nomes dos episódios seguem o idioma da fonte, frequentemente inglês. O catálogo de filmes é limitado à coleção de demonstração de ação e aventura, não é uma base completa ou garantia de lançamentos atuais. Erros e resultados vazios são tratados na interface; consultas com falha oferecem nova tentativa. As APIs de catálogo não exigem credenciais.
 
 ## Login com Google
 
@@ -80,3 +80,7 @@ Os valores reais permanecem em .env e api/auth/config.local.php no computador de
 Para o site publicado, cadastre GOOGLE_CLIENT_ID e SESSION_SECRET nas variáveis do Netlify, no escopo Functions, usando os valores reais do .env local. O arquivo .env não é enviado pelo Git e não configura automaticamente o ambiente remoto. Faça um novo deploy depois de configurar essas variáveis. A origem https://capte.netlify.app deve estar autorizada no Google Cloud.
 
 O restante do material do laboratório, incluindo dependências, build e testes já incluídos, permanece no repositório. O deploy continua publicando apenas dist e a Function.
+
+## Histórico do projeto
+
+Veja a [revisão do histórico Git](docs/historico-git.md) para a avaliação de cada commit original e a sequência reorganizada.
