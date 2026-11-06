@@ -1,3 +1,4 @@
+import { iniciarAutenticacao } from '../../components/autenticacao/google-login.js';
 import { buscarSeries, buscarFilmes, buscarEpisodios } from '../../scripts/services/catalogo-api.js';
 import { criarCard } from '../../components/catalogo/card.js';
 import { elemento, textoSemHtml } from '../../utils/texto.js';
@@ -99,3 +100,5 @@ document.querySelectorAll('[data-tipo]').forEach(botao => botao.addEventListener
 document.querySelector('#fechar').addEventListener('click', () => dialog.close());
 dialog.addEventListener('close', () => { detalhes?.abort(); detalhes = null; });
 carregar();
+
+iniciarAutenticacao();

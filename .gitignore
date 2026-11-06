@@ -1,0 +1,6 @@
+# Credenciais reais ficam locais e nas variáveis do Netlify.
+/.env
+/.env.*
+!/.env.example
+/api/auth/config.local.php
+/netlify/lib/lab-config.mjs
