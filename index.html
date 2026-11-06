@@ -7,10 +7,11 @@
 <link rel="stylesheet" href="src/styles/variaveis/cores.css">
 <link rel="stylesheet" href="src/styles/globais/base.css">
 <link rel="stylesheet" href="src/pages/index/index.css">
+<link rel="stylesheet" href="src/components/autenticacao/google-login.css">
 <script type="module" src="src/pages/index/index.js"></script>
 </head>
 <body>
-<header><a class="marca" href="./index.html">acompanhe<span>.</span></a><nav aria-label="Catálogo"><button data-tipo="series" aria-pressed="true">Séries</button><button data-tipo="filmes" aria-pressed="false">Filmes</button></nav><section class="autenticacao" aria-label="Sua conta"><div id="google-login"></div><div id="perfil" hidden><div><strong id="usuario-nome"></strong><small id="usuario-email"></small></div><button id="sair" type="button">Sair</button></div><p id="auth-status" role="status" aria-live="polite">Carregando login…</p></section></header>
+<header><a class="marca" href="./index.html">acompanhe<span>.</span></a><nav aria-label="Catálogo"><button data-tipo="series" aria-pressed="true">Séries</button><button data-tipo="filmes" aria-pressed="false">Filmes</button></nav><section class="autenticacao" aria-label="Sua conta"><div id="google-login"></div><div id="perfil" hidden><span id="usuario-avatar" class="usuario-avatar" aria-hidden="true"></span><div class="usuario-info"><strong id="usuario-nome"></strong><small id="usuario-email"></small></div><button id="sair" type="button">Sair</button></div><p id="auth-status" role="status" aria-live="polite">Carregando login…</p></section></header>
 <main>
 <section class="introducao"><p class="etiqueta">SEU PRÓXIMO PLAY</p><h1>Uma boa história começa aqui.</h1><p>Explore filmes, descubra séries e consulte cada episódio.</p>
 <form id="busca" role="search"><label class="sr-only" for="termo">Nome do filme ou da série</label><input id="termo" type="search" maxlength="150" placeholder="Buscar uma série…"><button>Buscar</button></form></section>

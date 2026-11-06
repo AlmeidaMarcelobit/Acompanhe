@@ -27,6 +27,7 @@ export async function iniciarAutenticacao() {
     if (sessao.user) {
       document.querySelector('#usuario-nome').textContent = sessao.user.name;
       document.querySelector('#usuario-email').textContent = sessao.user.email;
+      document.querySelector('#usuario-avatar').textContent = sessao.user.name.trim().split(/\s+/).slice(0, 2).map(parte => parte[0]).join('').toUpperCase() || 'U';
       mensagem.textContent = '';
     }
   }
@@ -53,7 +54,8 @@ export async function iniciarAutenticacao() {
       },
     });
     botao.replaceChildren();
-    window.google.accounts.id.renderButton(botao, { type: 'standard', theme: 'outline', size: 'large', text: 'signin_with', locale: 'pt-BR' });
+    window.google.accounts.id.renderButton(botao, { type: 'standard', theme: 'filled_black', shape: 'pill', size: 'large', text: 'continue_with', width: '260', locale: 'pt-BR' });
+    mensagem.textContent = '';
   }
   sair.addEventListener('click', async () => {
     if (ocupado) return;
