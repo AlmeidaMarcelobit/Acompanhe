@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acompanhe | Filmes e séries</title>
+<link rel="stylesheet" href="src/styles/resets/reset.css">
+<link rel="stylesheet" href="src/styles/variaveis/cores.css">
+<link rel="stylesheet" href="src/styles/globais/base.css">
+<link rel="stylesheet" href="src/pages/index/index.css">
+<link rel="stylesheet" href="src/components/autenticacao/google-login.css">
+<script type="module" src="src/pages/index/index.js"></script>
+</head>
+<body>
+<header><a class="marca" href="./index.html">acompanhe<span>.</span></a><nav aria-label="Catálogo"><button data-tipo="series" aria-pressed="true">Séries</button><button data-tipo="filmes" aria-pressed="false">Filmes</button></nav><section class="autenticacao" aria-label="Sua conta"><div id="google-login"></div><div id="perfil" hidden><span id="usuario-avatar" class="usuario-avatar" aria-hidden="true"></span><div class="usuario-info"><strong id="usuario-nome"></strong><small id="usuario-email"></small></div><button id="sair" type="button">Sair</button></div><p id="auth-status" role="status" aria-live="polite">Carregando login…</p></section></header>
+<main>
+<section class="introducao"><p class="etiqueta">SEU PRÓXIMO PLAY</p><h1>Uma boa história começa aqui.</h1><p>Explore filmes, descubra séries e consulte cada episódio.</p>
+<form id="busca" role="search"><label class="sr-only" for="termo">Nome do filme ou da série</label><input id="termo" type="search" maxlength="150" placeholder="Buscar uma série…"><button>Buscar</button></form></section>
+<section aria-labelledby="titulo-catalogo"><h2 id="titulo-catalogo">Séries para descobrir</h2><p id="status" role="status" aria-live="polite"></p><button id="tentar" hidden>Tentar novamente</button><div id="catalogo" class="catalogo" aria-busy="false"></div></section>
+<noscript>Ative o JavaScript para consultar o catálogo e os episódios.</noscript>
+</main>
+<dialog id="detalhes" aria-labelledby="titulo-detalhes"><button id="fechar" class="fechar" autofocus>Fechar ✕</button><h2 id="titulo-detalhes"></h2><div id="conteudo-detalhes"></div></dialog>
+<footer><p>© 2026 Acompanhe | Marcelo de Araujo Almeida</p><p>Dados de séries: <a href="https://www.tvmaze.com/" target="_blank" rel="noopener noreferrer">TVmaze</a> · Filmes: <a href="https://www.sampleapis.com/api-list/movies" target="_blank" rel="noopener noreferrer">SampleAPIs</a></p></footer>
+</body></html>

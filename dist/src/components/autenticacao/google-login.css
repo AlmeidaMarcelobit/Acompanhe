@@ -1,0 +1,49 @@
+.autenticacao {
+  margin-left: auto;
+  max-width: 100%;
+  padding: 8px;
+  border: 1px solid var(--borda);
+  border-radius: 16px;
+  background: var(--superficie);
+  box-shadow: 0 4px 18px #0002;
+  transition: border-color .2s, box-shadow .2s;
+}
+.autenticacao:focus-within {
+  border-color: var(--destaque);
+  box-shadow: 0 0 0 3px #008fea20;
+}
+#google-login { min-height: 40px; max-width: 100%; }
+#auth-status {
+  max-width: 260px;
+  margin: 6px 4px 2px;
+  color: var(--secundario);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+#auth-status:empty { display: none; }
+#perfil { display: flex; align-items: center; gap: 10px; padding: 2px; }
+.usuario-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #008fea26;
+  color: #73c7ff;
+  border: 1px solid #008fea50;
+  font-size: 13px;
+  font-weight: 700;
+}
+.usuario-info { min-width: 0; max-width: 200px; }
+#perfil strong, #perfil small { display: block; overflow-wrap: anywhere; }
+#perfil strong { font-size: 13px; line-height: 1.4; }
+#perfil small { color: var(--secundario); font-size: 11px; }
+#sair { padding: 7px 12px; border-radius: 10px; font-size: 12px; background: var(--fundo); }
+#sair:hover { background: #008fea20; color: #73c7ff; }
+#sair:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 600px) {
+  .autenticacao { margin-left: 0; }
+  .usuario-info { max-width: 150px; }
+}
