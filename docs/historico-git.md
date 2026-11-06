@@ -1,6 +1,6 @@
 # Revisão e reorganização do histórico Git
 
-Revisão realizada em 6 de novembro de 2026. Foram avaliados os 26 commits de main e as alterações locais da área de login. A reorganização preserva as funcionalidades atuais, as dependências e os arquivos do laboratório.
+Revisão realizada em 6 de novembro de 2026. Foram avaliados os 26 commits de main e as alterações locais da área de login. A reorganização preserva as funcionalidades atuais, as dependências e os arquivos do projeto.
 
 ## Linha do tempo reorganizada
 
@@ -42,7 +42,7 @@ Revisão realizada em 6 de novembro de 2026. Foram avaliados os 26 commits de ma
 | f238a4b | Login Google, PHP e dependências Composer | Manter e completar | 4 | Entrega coerente; testes e exclusões de credenciais foram antecipados para este ponto. |
 | 12f0a0a | README completo | Distribuir | 3, 4 e 5 | Cada funcionalidade agora recebe suas próprias instruções quando é introduzida. |
 | ba97ccd | Netlify Function, npm e build | Corrigir e completar | 5 | Continha Client ID real e npm test sem seu arquivo. A nova versão usa ambiente e inclui testes. |
-| 6fbe59d | Testes, credenciais por ambiente, dependências e build | Separar | 4, 5 e 7 | Misturava validação de login com quase 110 mil linhas de dependências. Material de laboratório preservado em commit próprio. |
+| 6fbe59d | Testes, credenciais por ambiente, dependências e build | Separar | 4, 5 e 7 | Misturava validação de login com quase 110 mil linhas de dependências. Dependências e build preservados em commit próprio. |
 | Alterações locais | Tema escuro do login, perfil e CSS do componente | Commitar separadamente | 6 | Trabalho anterior preservado, sem depender do stash nem apagar arquivos locais. |
 
 ## Critérios e correções
@@ -51,7 +51,7 @@ Revisão realizada em 6 de novembro de 2026. Foram avaliados os 26 commits de ma
 - A remoção da página antiga acompanha a troca para o catálogo dinâmico, sem deixar link quebrado entre commits.
 - As capas do protótipo estático recebem a mesma regra de tamanho; a página histórica de detalhes recebe uma imagem válida e reset. Essas correções não alteram a aplicação atual.
 - O Client ID real não é embutido em nenhum dos commits reconstruídos. Os valores reais continuam nos arquivos locais ignorados e nas variáveis do Netlify.
-- Dependências e artefatos de build permanecem versionados por decisão do responsável pelo laboratório, em uma entrega isolada para facilitar revisão.
+- Dependências e artefatos de build permanecem versionados por decisão do responsável pelo projeto, em uma entrega isolada para facilitar revisão.
 - Os testes PHP entram com o backend PHP; os testes da Function entram com o comando npm test. Os testes de token usam dados de teste e não substituem as credenciais reais do aplicativo.
 - O commit inicial permanece com o hash original. Mensagens intermediárias foram normalizadas por responsabilidade.
 
@@ -60,3 +60,7 @@ Revisão realizada em 6 de novembro de 2026. Foram avaliados os 26 commits de ma
 A reconstrução modifica hashes que já existiam em origin/main. Nenhum push foi feito nesta tarefa. A atualização remota precisa de force-with-lease, usando o hash remoto conferido no momento da publicação. Não use um force simples.
 
 O histórico anterior foi salvo em um bundle local externo ao repositório, junto com um patch e cópias das alterações de trabalho. O backup não precisa ser publicado. A pasta .idea e as credenciais locais foram preservadas sem entrar nos novos commits.
+
+## Contexto de publicação
+
+O Acompanhe é um site real, publicado no Netlify com deploy automático pelo GitHub. Referências a laboratório nos nomes de commits antigos acima registram a terminologia usada naquele momento; não descrevem a finalidade atual do site. XAMPP e sessões isoladas são usados apenas para desenvolvimento e testes.

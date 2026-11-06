@@ -74,6 +74,7 @@ export async function iniciarAutenticacao() {
   try {
     sessao = await consultarSessao();
     atualizar();
+    window.dispatchEvent(new CustomEvent('autenticacao:alterada', { detail: sessao.user }));
     if (!sessao.user) await prepararBotao();
   } catch { mensagem.textContent = 'Login indisponível. Recarregue a página para tentar novamente.'; }
 }
