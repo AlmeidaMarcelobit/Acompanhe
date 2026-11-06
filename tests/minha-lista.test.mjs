@@ -88,3 +88,42 @@ test('erro de armazenamento não confirma gravação e é recuperável', async (
   const handler = criarHandlerLista({ secret, armazenamento: () => { throw new Error('offline'); } });
   assert.equal((await handler(request(await logar('pessoa-d')))).status, 503);
 });
+
+test('temporada marca em lote sem duplicar e mantém outras temporadas', () => {
+  let doc = atualizarLista(null, { action: 'episodio', item: serie, episodio: { ...ep, id: 201, temporada: 2 }, visto: true });
+  doc = atualizarLista(doc, { action: 'atual', item: serie, episodio: { ...ep, id: 102 } });
+  const op = { action: 'temporada', item: serie, temporada: 1, episodios: [101, 102, 103, 103], visto: true };
+  doc = atualizarLista(doc, op);
+  doc = atualizarLista(doc, op);
+  assert.deepEqual(doc.itens['series:10'].vistos.sort(), [101, 102, 103, 201]);
+  assert.equal(doc.itens['series:10'].atual, null);
+  doc = atualizarLista(doc, { action: 'episodio', item: serie, episodio: { ...ep, id: 102 }, visto: false });
+  assert.deepEqual(doc.itens['series:10'].vistos.sort(), [101, 103, 201]);
+  doc = atualizarLista(doc, { action: 'status', chave: 'series:10', status: 'concluido' });
+  doc = atualizarLista(doc, { ...op, visto: false });
+  assert.deepEqual(doc.itens['series:10'].vistos, [201]);
+  assert.equal(doc.itens['series:10'].status, 'assistindo');
+});
+test('temporada preserva episódio atual externo e rejeita lotes inválidos sem gravar', () => {
+  const doc = atualizarLista(null, { action: 'atual', item: serie, episodio: { ...ep, id: 201, temporada: 2 } });
+  const op = { action: 'temporada', item: serie, temporada: 1, episodios: [101, 102], visto: true };
+  const novo = atualizarLista(doc, op);
+  assert.equal(novo.itens['series:10'].atual.id, 201);
+  for (const valor of [{ episodios: [] }, { episodios: [0] }, { episodios: ['101'] }, { temporada: -1 }, { visto: 'true' }, { episodios: Array(2001).fill(101) }, { item: filme }]) assert.throws(() => atualizarLista(doc, { ...op, ...valor }));
+  assert.deepEqual(doc.itens['series:10'].vistos, []);
+});
+test('temporada e episódio concorrentes preservam ambas as alterações', async () => {
+  const store = memoria();
+  const handler = criarHandlerLista({ secret, armazenamento: () => store });
+  const pessoa = await logar('temporadas-concorrentes');
+  const respostas = await Promise.all([
+    handler(request(pessoa, { action: 'temporada', item: serie, temporada: 1, episodios: [101, 102, 103], visto: true })),
+    handler(request(pessoa, { action: 'episodio', item: serie, episodio: { ...ep, id: 201, temporada: 2 }, visto: true }))
+  ]);
+  assert.deepEqual(respostas.map(r => r.status), [200, 200]);
+  assert.deepEqual((await (await handler(request(pessoa))).json()).itens[0].vistos.sort(), [101, 102, 103, 201]);
+});
+test('marcação em lote exclui episódios com data futura', async () => {
+  const { episodiosDisponiveis } = await import('../src/utils/progresso.mjs');
+  assert.deepEqual(episodiosDisponiveis([{ id: 1, airdate: '2026-11-05' }, { id: 2, airdate: '2026-11-06' }, { id: 3, airdate: '2026-11-07' }, { id: 4, airdate: null }], '2026-11-06').map(ep => ep.id), [1, 2, 4]);
+});

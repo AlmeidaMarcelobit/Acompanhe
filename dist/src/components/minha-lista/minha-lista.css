@@ -30,3 +30,8 @@ button:disabled, select:disabled { opacity: .55; cursor: wait; }
 .episodio-visto input { flex: none; accent-color: #24b66d; width: 18px; height: 18px; margin: 0; }
 .episodio-visto.visto { color: #87e4ad; }
 @media(max-width: 480px) { nav { flex-wrap: wrap; } nav button { padding: 8px 10px; } .editor-acoes label { width: 100%; } .editor-lista { padding: 12px; } }
+.temporada-acoes { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 12px 0; padding: 12px; background: var(--superficie); border-radius: 10px; }
+.temporada-acoes button { font-size: 12px; padding: 8px 10px; }
+.temporada-acoes button[aria-pressed="true"] { color: #87e4ad; border-color: #24b66d; background: #24b66d18; }
+.temporada-acoes button[aria-pressed="mixed"] { border-color: var(--destaque); }
+.temporada-progresso { color: var(--secundario); font-size: 12px; }

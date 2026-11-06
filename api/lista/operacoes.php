@@ -10,7 +10,7 @@ function atualizarLista(array $documento, array $operacao): array {
     if (!is_string($chave) || !preg_match('/^(series|filmes):[1-9]\d*$/D', $chave)) throw new InvalidArgumentException('Título inválido.');
     $action = $operacao['action'] ?? '';
     if ($action === 'remover') { unset($itens[$chave]); return ['itens' => $itens]; }
-    if (!in_array($action, ['salvar', 'status', 'episodio', 'atual'], true)) throw new InvalidArgumentException('Operação inválida.');
+    if (!in_array($action, ['salvar', 'status', 'episodio', 'atual', 'temporada'], true)) throw new InvalidArgumentException('Operação inválida.');
     $item = $itens[$chave] ?? null;
     if (!$item) {
         if (!isset($operacao['item']) || !is_array($operacao['item'])) throw new InvalidArgumentException('Adicione o título à lista primeiro.');
@@ -28,9 +28,11 @@ function atualizarLista(array $documento, array $operacao): array {
         if ($status === 'concluido') $item['atual'] = null;
     } else {
         if ($item['tipo'] !== 'series') throw new InvalidArgumentException('Filmes não possuem episódios.');
+        if ($action !== 'temporada') {
         $ep = $operacao['episodio'] ?? null;
         if (!is_array($ep) || !is_int($ep['id'] ?? null) || $ep['id'] < 1 || !is_int($ep['temporada'] ?? null) || $ep['temporada'] < 0 || !array_key_exists('numero', $ep) || ($ep['numero'] !== null && (!is_int($ep['numero']) || $ep['numero'] < 0))) throw new InvalidArgumentException('Episódio inválido.');
         $episodio = ['id' => $ep['id'], 'temporada' => $ep['temporada'], 'numero' => $ep['numero'], 'nome' => is_string($ep['nome'] ?? null) ? mb_substr($ep['nome'], 0, 200) : ''];
+        }
         if ($action === 'atual') {
             if (in_array($ep['id'], $item['vistos'], true)) throw new InvalidArgumentException('Este episódio já está marcado como visto.');
             $item['atual'] = $episodio;
@@ -38,10 +40,16 @@ function atualizarLista(array $documento, array $operacao): array {
         } else {
             if (!is_bool($operacao['visto'] ?? null)) throw new InvalidArgumentException('Marcação inválida.');
             $vistos = array_fill_keys($item['vistos'], true);
-            if ($operacao['visto']) $vistos[$ep['id']] = true; else unset($vistos[$ep['id']]);
+            if ($action === 'temporada') {
+                $ids = $operacao['episodios'] ?? null;
+                if (!is_int($operacao['temporada'] ?? null) || $operacao['temporada'] < 0 || !is_array($ids) || !$ids || count($ids) > 2000) throw new InvalidArgumentException('Temporada inválida.');
+                foreach ($ids as $id) if (!is_int($id) || $id < 1) throw new InvalidArgumentException('Temporada inválida.');
+                $ids = array_unique($ids);
+            } else $ids = [$ep['id']];
+            foreach ($ids as $id) { if ($operacao['visto']) $vistos[$id] = true; else unset($vistos[$id]); }
             if (count($vistos) > 20000) throw new InvalidArgumentException('Limite de episódios atingido.');
             $item['vistos'] = array_keys($vistos);
-            if (($item['atual']['id'] ?? null) === $ep['id'] && $operacao['visto']) $item['atual'] = null;
+            if (in_array($item['atual']['id'] ?? null, $ids, true) && $operacao['visto']) $item['atual'] = null;
             if ($item['status'] === 'quero' || ($item['status'] === 'concluido' && !$operacao['visto'])) $item['status'] = 'assistindo';
         }
     }

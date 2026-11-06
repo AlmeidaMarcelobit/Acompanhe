@@ -100,3 +100,7 @@ Nas séries, cada episódio tem **Já vi** e **Estou neste**. Marcar um episódi
 O `netlify.toml` encaminha `/api/lista/index.php` para a Function, mantendo a mesma URL de API para os dois ambientes. A biblioteca `@netlify/blobs` é instalada pelo npm; em Functions publicadas, a conexão usa o contexto do próprio site. Não é necessário adicionar outra chave de armazenamento ao frontend. Faça novo deploy para disponibilizar esta função; os testes locais não substituem a conferência do armazenamento no site publicado.
 
 Validação: `npm test` executa testes de login e lista, incluindo persistência entre sessões, isolamento entre contas, gravações concorrentes e falha de armazenamento. `C:/xampp/php/php.exe tests/minha-lista.php` verifica as regras equivalentes no PHP. A interface também foi conferida em sessão isolada de desenvolvimento, sem alterar contas Google reais.
+
+### Temporadas inteiras
+
+Dentro de cada temporada, use **Marcar temporada como vista** para registrar de uma vez os episódios disponíveis. O botão passa a **Desmarcar temporada** quando todos estão vistos. A contagem mostra o progresso parcial; as marcações individuais continuam disponíveis. A seleção em lote exclui episódios com data de exibição futura e inclui os sem data informada. O episódio atual é limpo apenas se estiver entre os episódios marcados como vistos. Outras temporadas não são alteradas, e marcar uma temporada não conclui automaticamente a série inteira.

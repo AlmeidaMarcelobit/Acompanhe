@@ -1,3 +1,4 @@
+import { episodiosDisponiveis } from '../../utils/progresso.mjs';
 import { elemento } from '../../utils/texto.js';
 import { criarCard } from '../catalogo/card.js';
 import { observarLista, vincularLista, atualizarMinhaLista, chaveLista, encontrarNaLista } from '../../scripts/services/minha-lista-api.js';
@@ -94,4 +95,29 @@ export function criarControleEpisodio(item, episodio) {
     label.classList.toggle('visto', check.checked);
   });
   return { controles, parar };
+}
+
+export function criarControleTemporada(item, numero, episodios) {
+  const area = elemento('div', undefined, 'temporada-acoes');
+  const botao = elemento('button'); botao.type = 'button';
+  const resumo = elemento('span', '', 'temporada-progresso');
+  const nome = numero === 0 ? 'especiais' : `temporada ${numero}`;
+  const disponiveis = episodiosDisponiveis(episodios);
+  const ids = disponiveis.map(ep => ep.id);
+  let todos = false;
+  botao.addEventListener('click', () => atualizarMinhaLista({ action: 'temporada', item, temporada: numero, episodios: ids, visto: !todos }));
+  const parar = observarLista(estado => {
+    const salvo = encontrarNaLista(item);
+    const vistos = new Set(salvo?.vistos || []);
+    const quantidade = ids.filter(id => vistos.has(id)).length;
+    todos = ids.length > 0 && quantidade === ids.length;
+    botao.textContent = todos ? 'Desmarcar temporada' : 'Marcar temporada como vista';
+    botao.setAttribute('aria-label', todos ? `Desmarcar episódios de ${nome}` : `Marcar episódios disponíveis de ${nome} como vistos`);
+    botao.setAttribute('aria-pressed', todos ? 'true' : quantidade ? 'mixed' : 'false');
+    botao.disabled = !estado.usuario || !estado.pronto || estado.salvando || !ids.length;
+    resumo.textContent = ids.length ? `${quantidade} de ${ids.length} disponíveis vistos${disponiveis.length < episodios.length ? ` · ${episodios.length - disponiveis.length} ainda sem exibição` : ''}` : 'Nenhum episódio disponível para marcar.';
+    botao.title = 'A marcação em lote inclui apenas episódios já exibidos ou sem data informada. Você pode ajustar cada episódio abaixo.';
+  });
+  area.append(botao, resumo);
+  return { area, parar };
 }

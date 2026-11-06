@@ -21,3 +21,22 @@ $rejeitou = false;
 try { atualizarLista($doc, ['action' => 'episodio', 'item' => $filme, 'episodio' => $ep, 'visto' => true]); } catch (InvalidArgumentException $e) { $rejeitou = true; }
 conferir($rejeitou, 'Filme aceitou episódio.');
 echo "OK: situações, IDs por tipo, vistos, episódio atual, remoção e validação PHP.\n";
+
+$doc = atualizarLista([], ['action' => 'episodio', 'item' => $serie, 'episodio' => array_replace($ep, ['id' => 201, 'temporada' => 2]), 'visto' => true]);
+$doc = atualizarLista($doc, ['action' => 'atual', 'item' => $serie, 'episodio' => array_replace($ep, ['id' => 102])]);
+$op = ['action' => 'temporada', 'item' => $serie, 'temporada' => 1, 'episodios' => [101, 102, 103, 103], 'visto' => true];
+$doc = atualizarLista($doc, $op);
+$doc = atualizarLista($doc, $op);
+$vistos = $doc['itens']['series:10']['vistos']; sort($vistos);
+conferir($vistos === [101, 102, 103, 201], 'Lote perdeu outra temporada ou duplicou episódios.');
+conferir($doc['itens']['series:10']['atual'] === null, 'Lote não limpou episódio atual já visto.');
+$doc = atualizarLista($doc, ['action' => 'episodio', 'item' => $serie, 'episodio' => array_replace($ep, ['id' => 102]), 'visto' => false]);
+conferir(!in_array(102, $doc['itens']['series:10']['vistos'], true), 'Marcação individual deixou de funcionar após lote.');
+$doc = atualizarLista($doc, array_replace($op, ['visto' => false]));
+conferir($doc['itens']['series:10']['vistos'] === [201], 'Desmarcar temporada afetou outra.');
+foreach ([[], [0], ['101'], array_fill(0, 2001, 101)] as $ids) {
+    $rejeitou = false;
+    try { atualizarLista($doc, array_replace($op, ['episodios' => $ids])); } catch (InvalidArgumentException $e) { $rejeitou = true; }
+    conferir($rejeitou, 'Temporada inválida aceita.');
+}
+echo "OK: temporadas inteiras, idempotência, ajuste individual e validação de lotes PHP.\n";

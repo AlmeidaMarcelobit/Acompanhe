@@ -1,4 +1,4 @@
-import { iniciarMinhaLista, criarEditorLista, criarControleEpisodio, nomeEpisodio } from '../../components/minha-lista/minha-lista.js';
+import { iniciarMinhaLista, criarEditorLista, criarControleEpisodio, criarControleTemporada, nomeEpisodio } from '../../components/minha-lista/minha-lista.js';
 import { vincularLista, observarLista, encontrarNaLista } from '../../scripts/services/minha-lista-api.js';
 import { iniciarAutenticacao } from '../../components/autenticacao/google-login.js';
 import { buscarSeries, buscarFilmes, buscarEpisodios } from '../../scripts/services/catalogo-api.js';
@@ -89,6 +89,9 @@ async function abrirDetalhes(item) {
       const grupo = elemento('details');
       grupo.open = temporadas.size === 1 || numero === alvo;
       grupo.append(elemento('summary', `${numero === 0 ? 'Especiais' : `Temporada ${numero}`} · ${lista.length} episódios`));
+      const temporada = criarControleTemporada(item, numero, lista);
+      grupo.append(temporada.area);
+      pararObservadores.push(temporada.parar);
       const ul = elemento('ul', undefined, 'episodios');
       for (const episodio of lista) {
         const li = elemento('li', `${episodio.number == null ? 'Especial' : `E${String(episodio.number).padStart(2, '0')}`} — ${episodio.name || 'Título não informado'}`);

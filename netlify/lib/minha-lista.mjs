@@ -22,7 +22,7 @@ export function atualizarLista(documento, operacao) {
   if (typeof chave !== 'string' || !/^(series|filmes):[1-9]\d*$/.test(chave)) throw new Error('Título inválido.');
   const existente = itens[chave];
   if (operacao.action === 'remover') { delete itens[chave]; return { itens }; }
-  if (!['salvar', 'status', 'episodio', 'atual'].includes(operacao.action)) throw new Error('Operação inválida.');
+  if (!['salvar', 'status', 'episodio', 'atual', 'temporada'].includes(operacao.action)) throw new Error('Operação inválida.');
   if (!existente && !operacao.item) throw new Error('Adicione o título à lista primeiro.');
   if (!existente && Object.keys(itens).length >= 500) throw new Error('Sua lista atingiu o limite de 500 títulos.');
   const item = { ...(existente || { ...normalizar(operacao.item), status: 'quero', vistos: [], atual: null }) };
@@ -33,18 +33,23 @@ export function atualizarLista(documento, operacao) {
     if (status === 'concluido') item.atual = null;
   } else {
     if (item.tipo !== 'series') throw new Error('Filmes não possuem episódios.');
-    const episodio = episodioValido(operacao.episodio);
     const vistos = new Set(item.vistos);
     if (operacao.action === 'atual') {
+      const episodio = episodioValido(operacao.episodio);
       if (vistos.has(episodio.id)) throw new Error('Este episódio já está marcado como visto.');
       item.atual = episodio;
       item.status = 'assistindo';
     } else {
       if (typeof operacao.visto !== 'boolean') throw new Error('Marcação inválida.');
-      if (operacao.visto) vistos.add(episodio.id); else vistos.delete(episodio.id);
+      let ids;
+      if (operacao.action === 'temporada') {
+        if (!Number.isInteger(operacao.temporada) || operacao.temporada < 0 || !Array.isArray(operacao.episodios) || !operacao.episodios.length || operacao.episodios.length > 2000 || operacao.episodios.some(id => !valido(id))) throw new Error('Temporada inválida.');
+        ids = [...new Set(operacao.episodios)];
+      } else ids = [episodioValido(operacao.episodio).id];
+      for (const id of ids) { if (operacao.visto) vistos.add(id); else vistos.delete(id); }
       if (vistos.size > 20000) throw new Error('Limite de episódios atingido.');
       item.vistos = [...vistos];
-      if (item.atual?.id === episodio.id && operacao.visto) item.atual = null;
+      if (ids.includes(item.atual?.id) && operacao.visto) item.atual = null;
       if (item.status === 'quero' || (item.status === 'concluido' && !operacao.visto)) item.status = 'assistindo';
     }
   }
