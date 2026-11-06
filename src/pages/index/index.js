@@ -58,7 +58,6 @@ async function abrirDetalhes(item) {
   pararObservadores.push(editor.parar);
   if (!dialog.open) dialog.showModal();
   if (item.tipo === 'filmes') {
-    conteudo.append(elemento('p', 'Filmes não possuem lista de episódios.', 'sinopse'));
     return;
   }
   const mensagem = elemento('p', 'Carregando episódios…', 'sinopse');
