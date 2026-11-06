@@ -35,5 +35,15 @@
 <noscript>Ative o JavaScript para consultar o catálogo e os episódios.</noscript>
 </main>
 <dialog id="detalhes" aria-labelledby="titulo-detalhes"><button id="fechar" class="fechar" autofocus>Fechar ✕</button><h2 id="titulo-detalhes"></h2><div id="conteudo-detalhes"></div></dialog>
-<footer><p>© 2026 Acompanhe | Marcelo de Araujo Almeida</p></footer>
+<footer><p>© 2026 Acompanhe | Marcelo de Araujo Almeida</p><button id="abrir-creditos" type="button" aria-haspopup="dialog">Sobre o Acompanhe</button></footer>
+<dialog id="creditos" aria-labelledby="titulo-creditos">
+  <button id="fechar-creditos" type="button" class="fechar" autofocus>Fechar ✕</button>
+  <h2 id="titulo-creditos">Sobre o Acompanhe</h2>
+  <p>Organize seus filmes, séries e episódios em um só lugar.</p>
+  <section class="fonte-creditos" aria-label="Créditos dos dados">
+    <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer"><img src="src/assets/icones/tmdb.svg" alt="The Movie Database — TMDB" width="120"></a>
+    <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+    <p>Dados em português do Brasil quando disponíveis. Títulos salvos anteriormente podem utilizar <a href="https://www.tvmaze.com/" target="_blank" rel="noopener noreferrer">TVmaze</a> e <a href="https://www.sampleapis.com/api-list/movies" target="_blank" rel="noopener noreferrer">SampleAPIs</a>.</p>
+  </section>
+</dialog>
 </body></html>

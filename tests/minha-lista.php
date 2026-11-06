@@ -40,3 +40,15 @@ foreach ([[], [0], ['101'], array_fill(0, 2001, 101)] as $ids) {
     conferir($rejeitou, 'Temporada inválida aceita.');
 }
 echo "OK: temporadas inteiras, idempotência, ajuste individual e validação de lotes PHP.\n";
+
+$antiga = ['id' => 100, 'tipo' => 'series', 'nome' => 'Série antiga'];
+$nova = ['id' => 100, 'tipo' => 'series', 'nome' => 'Série em português', 'fonte' => 'tmdb'];
+$doc = atualizarLista([], ['action' => 'episodio', 'item' => $antiga, 'episodio' => $ep, 'visto' => true]);
+$doc = atualizarLista($doc, ['action' => 'salvar', 'item' => $nova]);
+conferir($doc['itens']['series:100']['vistos'] === [101], 'A integração TMDB sobrescreveu o legado.');
+conferir($doc['itens']['tmdb:series:100']['fonte'] === 'tmdb', 'Fonte TMDB não persistida.');
+$doc = atualizarLista($doc, ['action' => 'status', 'chave' => 'tmdb:series:100', 'status' => 'concluido']);
+conferir($doc['itens']['series:100']['status'] === 'assistindo', 'Status TMDB afetou título legado.');
+$doc = atualizarLista($doc, ['action' => 'remover', 'chave' => 'tmdb:series:100']);
+conferir(isset($doc['itens']['series:100']), 'Remoção TMDB afetou legado.');
+echo "OK: preservação do progresso legado e isolamento entre fontes PHP.\n";

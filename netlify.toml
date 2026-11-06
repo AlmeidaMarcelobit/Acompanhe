@@ -20,3 +20,9 @@
   to = "/.netlify/functions/minha-lista"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/api/catalogo/index.php"
+  to = "/.netlify/functions/catalogo"
+  status = 200
+  force = true

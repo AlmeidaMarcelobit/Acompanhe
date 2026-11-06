@@ -4,12 +4,13 @@ const texto = (value, max) => typeof value === 'string' ? value.slice(0, max) : 
 const url = value => typeof value === 'string' && /^https?:\/\//.test(value) ? value.slice(0, 2000) : '';
 export function chaveItem(item) {
   if (!item || !['series', 'filmes'].includes(item.tipo) || !valido(item.id)) throw new Error('Título inválido.');
-  return `${item.tipo}:${item.id}`;
+  if (item.fonte != null && item.fonte !== 'tmdb') throw new Error('Fonte inválida.');
+  return `${item.fonte === 'tmdb' ? 'tmdb:' : ''}${item.tipo}:${item.id}`;
 }
 function normalizar(item) {
   chaveItem(item);
   if (!texto(item.nome, 200).trim()) throw new Error('Nome do título não informado.');
-  return { id: item.id, tipo: item.tipo, nome: texto(item.nome, 200), imagem: url(item.imagem), ano: texto(item.ano, 4), sinopse: texto(item.sinopse, 5000), url: url(item.url) };
+  return { ...(item.fonte === 'tmdb' ? { fonte: 'tmdb' } : {}), id: item.id, tipo: item.tipo, nome: texto(item.nome, 200), imagem: url(item.imagem), ano: texto(item.ano, 4), sinopse: texto(item.sinopse, 5000), url: url(item.url) };
 }
 function episodioValido(episodio) {
   if (!episodio || !valido(episodio.id) || !Number.isInteger(episodio.temporada) || episodio.temporada < 0 || (episodio.numero !== null && (!Number.isInteger(episodio.numero) || episodio.numero < 0))) throw new Error('Episódio inválido.');
@@ -19,7 +20,7 @@ export function atualizarLista(documento, operacao) {
   if (!operacao || typeof operacao !== 'object') throw new Error('Operação inválida.');
   const itens = { ...(documento?.itens || {}) };
   const chave = operacao.item ? chaveItem(operacao.item) : operacao.chave;
-  if (typeof chave !== 'string' || !/^(series|filmes):[1-9]\d*$/.test(chave)) throw new Error('Título inválido.');
+  if (typeof chave !== 'string' || !/^(?:tmdb:)?(series|filmes):[1-9]\d*$/.test(chave)) throw new Error('Título inválido.');
   const existente = itens[chave];
   if (operacao.action === 'remover') { delete itens[chave]; return { itens }; }
   if (!['salvar', 'status', 'episodio', 'atual', 'temporada'].includes(operacao.action)) throw new Error('Operação inválida.');

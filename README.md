@@ -39,10 +39,10 @@ Pastas usam nomes sem acentos para facilitar caminhos e publicação. scripts/ve
 
 ## APIs
 
-- [TVmaze](https://www.tvmaze.com/api): séries e episódios, sem chave, com CORS. Dados sob CC BY-SA; mantenha a atribuição e observe a licença ao reutilizar dados.
-- [SampleAPIs](https://www.sampleapis.com/api-list/movies): catálogo de demonstração de filmes de ação e aventura, sem chave. Busca local nos títulos retornados, em idioma original; sem ano ou sinopse. Link para IMDb quando disponível.
+- [TMDB](https://developer.themoviedb.org/): fonte principal com language=pt-BR, para filmes, séries, temporadas e episódios. Filmes também usam region=BR. Traduções dependem da disponibilidade no provedor; quando o nome traduzido não existir, pode aparecer o nome original. O catálogo inclui produções de vários países, não apenas brasileiras.
+- TVmaze e SampleAPIs são mantidos apenas para compatibilidade com títulos antigos e como fallback quando o token TMDB ainda não estiver configurado. A atribuição está nos detalhes dos títulos e na seção Sobre.
 
-Os nomes dos episódios seguem o idioma da fonte, frequentemente inglês. O catálogo de filmes é limitado à coleção de demonstração de ação e aventura, não é uma base completa ou garantia de lançamentos atuais. Erros e resultados vazios são tratados na interface; consultas com falha oferecem nova tentativa. As APIs de catálogo não exigem credenciais.
+A integração TMDB recebe o token apenas no servidor e carrega episódios por temporada sob demanda. Erros e resultados vazios são tratados na interface. O rodapé não exibe a antiga mensagem de fontes; a seção Sobre contém a atribuição e o logotipo oficial exigidos pelo TMDB.
 
 ## Login com Google
 
@@ -104,3 +104,15 @@ Validação: `npm test` executa testes de login e lista, incluindo persistência
 ### Temporadas inteiras
 
 Dentro de cada temporada, use **Marcar temporada como vista** para registrar de uma vez os episódios disponíveis. O botão passa a **Desmarcar temporada** quando todos estão vistos. A contagem mostra o progresso parcial; as marcações individuais continuam disponíveis. A seleção em lote exclui episódios com data de exibição futura e inclui os sem data informada. O episódio atual é limpo apenas se estiver entre os episódios marcados como vistos. Outras temporadas não são alteradas, e marcar uma temporada não conclui automaticamente a série inteira.
+
+## Configurar TMDB em português do Brasil
+
+No Netlify, cadastre **TMDB_READ_ACCESS_TOKEN** com o **API Read Access Token** (Token de Leitura da API), no escopo Functions ou All scopes. Não use a chave curta de API nesse campo. Faça um novo deploy após salvar. O token não deve entrar no Git nem em scripts do navegador. O endpoint `/api/catalogo/index.php` é encaminhado para `netlify/functions/catalogo.mjs`.
+
+No XAMPP, defina TMDB_READ_ACCESS_TOKEN no ambiente do Apache ou adicione `tmdb_read_access_token` ao arquivo ignorado `api/auth/config.local.php`. O `.env.example` apenas documenta os nomes das variáveis; o PHP não importa .env automaticamente.
+
+Sem token configurado, as fontes anteriores continuam disponíveis. Token inválido ou falha no TMDB são exibidos como erro de consulta, sem ocultar o problema com fallback. Cada temporada faz uma consulta separada, com cache de respostas públicas e timeout.
+
+Os títulos novos têm `fonte: tmdb` e chave `tmdb:series:ID` ou `tmdb:filmes:ID`. Itens antigos continuam com suas chaves e episódios originais. Isso evita misturar IDs de provedores diferentes e preserva os vistos, o episódio atual e as situações já salvas. Não há conversão automática entre títulos antigos e novos: uma versão TMDB do mesmo título será uma entrada separada até existir uma migração conferida.
+
+Referências: [idiomas](https://developer.themoviedb.org/docs/languages), [autenticação](https://developer.themoviedb.org/docs/authentication-application), [temporadas](https://developer.themoviedb.org/reference/tv-season-details) e [atribuição/licenciamento](https://developer.themoviedb.org/docs/faq). O TMDB exige atribuição; aplicações com finalidade principal de gerar receita precisam tratar a licença comercial com o provedor.

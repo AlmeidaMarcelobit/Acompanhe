@@ -1,7 +1,7 @@
 import { iniciarMinhaLista, criarEditorLista, criarControleEpisodio, criarControleTemporada, criarLegendaEpisodios, nomeEpisodio } from '../../components/minha-lista/minha-lista.js';
 import { vincularLista, observarLista, encontrarNaLista } from '../../scripts/services/minha-lista-api.js';
 import { iniciarAutenticacao } from '../../components/autenticacao/google-login.js';
-import { buscarSeries, buscarFilmes, buscarEpisodios } from '../../scripts/services/catalogo-api.js';
+import { buscarSeries, buscarFilmes, buscarEpisodios, buscarTemporadas } from '../../scripts/services/catalogo-api.js';
 import { criarCard } from '../../components/catalogo/card.js';
 import { elemento, textoSemHtml } from '../../utils/texto.js';
 const catalogo = document.querySelector('#catalogo');
@@ -29,7 +29,7 @@ async function carregar() {
     const itens = await (tipo === 'series' ? buscarSeries : buscarFilmes)(termo.value.trim(), atual.signal);
     if (consulta !== atual) return;
     catalogo.replaceChildren(...itens.map(item => criarCard(item, abrirDetalhes)));
-    status.textContent = itens.length ? `${itens.length} título(s). Selecione um para ver detalhes${tipo === 'series' ? ' e episódios' : ' · Catálogo de demonstração: ação e aventura (títulos originais)'}.` : 'Nenhum título encontrado. Tente outro nome, inclusive no idioma original.';
+    status.textContent = itens.length ? `${itens.length} título(s). Selecione um para ver detalhes${tipo === 'series' ? ' e episódios' : ''}.` : 'Nenhum título encontrado. Tente outro nome, inclusive no idioma original.';
   } catch {
     if (consulta !== atual) return;
     status.textContent = 'Não foi possível carregar o catálogo. Verifique a conexão e tente novamente.';
@@ -47,7 +47,7 @@ async function abrirDetalhes(item) {
   document.querySelector('#titulo-detalhes').textContent = item.nome;
   conteudo.replaceChildren(elemento('p', textoSemHtml(item.sinopse) || 'Sinopse não disponível.', 'sinopse'));
   if (item.url && /^https?:\/\//.test(item.url)) {
-    const fonte = elemento('a', item.tipo === 'series' ? 'Ver no TVmaze' : 'Ver no IMDb');
+    const fonte = elemento('a', item.fonte === 'tmdb' ? 'Ver no TMDB' : item.tipo === 'series' ? 'Ver no TVmaze' : 'Ver no IMDb');
     fonte.href = item.url;
     fonte.target = '_blank';
     fonte.rel = 'noopener noreferrer';
@@ -65,7 +65,8 @@ async function abrirDetalhes(item) {
   conteudo.append(mensagem);
   const timeout = setTimeout(() => atual.abort(), 20000);
   try {
-    const episodios = await buscarEpisodios(item.id, atual.signal);
+    if (item.fonte === 'tmdb') { await carregarTemporadasTmdb(item, mensagem, atual); return; }
+    const episodios = await buscarEpisodios(item, atual.signal);
     if (detalhes !== atual || !dialog.open) return;
     mensagem.textContent = episodios.length ? `${episodios.length} episódios · Títulos no idioma informado pela fonte.` : 'Nenhum episódio cadastrado para esta série.';
     const proximo = elemento('p', '', 'proximo-episodio');
@@ -135,3 +136,67 @@ dialog.addEventListener('close', () => { detalhes?.abort(); detalhes = null; lim
 carregar();
 
 iniciarAutenticacao();
+
+function montarEpisodios(item, episodios, area, numero) {
+  const temporada = criarControleTemporada(item, numero, episodios);
+  area.append(temporada.area);
+  pararObservadores.push(temporada.parar);
+  const ul = elemento('ul', undefined, 'episodios');
+  for (const ep of episodios) {
+    const li = elemento('li', `${ep.number == null ? 'Especial' : `E${String(ep.number).padStart(2, '0')}`} — ${ep.name}`);
+    li.append(elemento('small', `${ep.airdate ? `Exibição: ${ep.airdate.split('-').reverse().join('/')}` : 'Data não informada'}${ep.runtime ? ` · ${ep.runtime} min` : ''}`));
+    const controle = criarControleEpisodio(item, ep);
+    li.append(controle.controles); pararObservadores.push(controle.parar); ul.append(li);
+  }
+  area.append(ul);
+}
+async function carregarTemporadasTmdb(item, mensagem, atual) {
+  const temporadas = await buscarTemporadas(item, atual.signal);
+  if (detalhes !== atual || !dialog.open) return;
+  mensagem.textContent = temporadas.length ? `${temporadas.length} temporada(s). Abra uma temporada para consultar os episódios em português quando houver tradução.` : 'Nenhuma temporada cadastrada.';
+  conteudo.append(criarLegendaEpisodios());
+  const salvo = encontrarNaLista(item);
+  const alvo = salvo?.atual?.temporada ?? temporadas.find(temporada => temporada.season_number > 0)?.season_number ?? 0;
+  for (const temporada of temporadas) {
+    const numero = temporada.season_number;
+    const grupo = elemento('details');
+    grupo.append(elemento('summary', `${numero === 0 ? 'Especiais' : `Temporada ${numero}`} · ${temporada.episode_count} episódios`));
+    const area = elemento('div'); grupo.append(area);
+    let carregando = false, pronto = false;
+    async function carregar() {
+      if (pronto || carregando || detalhes !== atual || !dialog.open) return;
+      carregando = true;
+      const aviso = elemento('p', 'Carregando episódios…', 'sinopse'); aviso.setAttribute('role', 'status'); area.replaceChildren(aviso);
+      try {
+        const episodios = await buscarEpisodios(item, atual.signal, numero);
+        if (detalhes !== atual || !dialog.open) return;
+        area.replaceChildren();
+        if (!episodios.length) area.append(elemento('p', 'Nenhum episódio cadastrado nesta temporada.', 'sinopse'));
+        else {
+          const proximo = elemento('p', '', 'proximo-episodio');
+          area.append(proximo);
+          pararObservadores.push(observarLista(estado => {
+            const salvo = encontrarNaLista(item);
+            const hoje = new Date().toISOString().slice(0, 10);
+            const seguinte = episodios.find(ep => ep.number != null && (!ep.airdate || ep.airdate <= hoje) && !salvo?.vistos.includes(ep.id));
+            proximo.hidden = !estado.usuario || !estado.pronto;
+            proximo.textContent = salvo?.status === 'concluido' ? 'Série marcada como concluída.' : salvo?.atual?.temporada === numero ? `Continuar em ${nomeEpisodio(salvo.atual)}` : seguinte ? `Próximo não visto nesta temporada: E${String(seguinte.number).padStart(2, '0')} — ${seguinte.name}` : 'Temporada em dia. Consulte as demais temporadas para continuar.';
+          }));
+          montarEpisodios(item, episodios, area, numero);
+        }
+        pronto = true;
+      } catch {
+        if (detalhes !== atual || !dialog.open) return;
+        area.replaceChildren(elemento('p', 'Não foi possível carregar esta temporada.', 'sinopse'));
+        const repetir = elemento('button', 'Tentar novamente'); repetir.type = 'button'; repetir.addEventListener('click', carregar); area.append(repetir);
+      } finally { carregando = false; }
+    }
+    grupo.addEventListener('toggle', () => { if (grupo.open) carregar(); });
+    conteudo.append(grupo);
+    grupo.open = numero === alvo;
+    if (grupo.open) carregar();
+  }
+}
+const creditos = document.querySelector('#creditos');
+document.querySelector('#abrir-creditos').addEventListener('click', () => creditos.showModal());
+document.querySelector('#fechar-creditos').addEventListener('click', () => creditos.close());

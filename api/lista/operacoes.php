@@ -2,12 +2,13 @@
 declare(strict_types=1);
 function chaveLista(array $item): string {
     if (!in_array($item['tipo'] ?? '', ['series', 'filmes'], true) || !is_int($item['id'] ?? null) || $item['id'] < 1) throw new InvalidArgumentException('Título inválido.');
-    return $item['tipo'] . ':' . $item['id'];
+    if (isset($item['fonte']) && $item['fonte'] !== 'tmdb') throw new InvalidArgumentException('Fonte inválida.');
+    return (($item['fonte'] ?? null) === 'tmdb' ? 'tmdb:' : '') . $item['tipo'] . ':' . $item['id'];
 }
 function atualizarLista(array $documento, array $operacao): array {
     $itens = $documento['itens'] ?? [];
     $chave = isset($operacao['item']) && is_array($operacao['item']) ? chaveLista($operacao['item']) : ($operacao['chave'] ?? '');
-    if (!is_string($chave) || !preg_match('/^(series|filmes):[1-9]\d*$/D', $chave)) throw new InvalidArgumentException('Título inválido.');
+    if (!is_string($chave) || !preg_match('/^(?:tmdb:)?(series|filmes):[1-9]\d*$/D', $chave)) throw new InvalidArgumentException('Título inválido.');
     $action = $operacao['action'] ?? '';
     if ($action === 'remover') { unset($itens[$chave]); return ['itens' => $itens]; }
     if (!in_array($action, ['salvar', 'status', 'episodio', 'atual', 'temporada'], true)) throw new InvalidArgumentException('Operação inválida.');
@@ -20,6 +21,7 @@ function atualizarLista(array $documento, array $operacao): array {
         $url = static fn($valor) => is_string($valor) && preg_match('/^https?:\/\//', $valor) ? mb_substr($valor, 0, 2000) : '';
         if (trim($texto($origem['nome'] ?? '', 200)) === '') throw new InvalidArgumentException('Nome do título não informado.');
         $item = ['id' => $origem['id'], 'tipo' => $origem['tipo'], 'nome' => $texto($origem['nome'], 200), 'imagem' => $url($origem['imagem'] ?? ''), 'ano' => $texto($origem['ano'] ?? '', 4), 'sinopse' => $texto($origem['sinopse'] ?? '', 5000), 'url' => $url($origem['url'] ?? ''), 'status' => 'quero', 'vistos' => [], 'atual' => null];
+        if (($origem['fonte'] ?? null) === 'tmdb') $item['fonte'] = 'tmdb';
     }
     if (in_array($action, ['salvar', 'status'], true)) {
         $status = $operacao['status'] ?? $item['status'];

@@ -1,10 +1,11 @@
+import { chaveCatalogo } from '../../utils/catalogo.mjs';
 import { consultarSessao } from './autenticacao-api.js';
 const endpoint = new URL('../../../api/lista/index.php', import.meta.url);
 const ouvintes = new Set();
 let estado = { usuario: null, itens: [], carregando: false, salvando: false, pronto: false, erro: '' };
 let geracao = 0;
 let csrf = '';
-export const chaveLista = item => `${item.tipo}:${item.id}`;
+export const chaveLista = chaveCatalogo;
 export const obterEstadoLista = () => estado;
 export const encontrarNaLista = item => estado.itens.find(salvo => chaveLista(salvo) === chaveLista(item));
 export function observarLista(callback) { ouvintes.add(callback); callback(estado); return () => ouvintes.delete(callback); }
