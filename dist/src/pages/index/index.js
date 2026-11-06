@@ -1,4 +1,4 @@
-import { iniciarMinhaLista, criarEditorLista, criarControleEpisodio, criarControleTemporada, nomeEpisodio } from '../../components/minha-lista/minha-lista.js';
+import { iniciarMinhaLista, criarEditorLista, criarControleEpisodio, criarControleTemporada, criarLegendaEpisodios, nomeEpisodio } from '../../components/minha-lista/minha-lista.js';
 import { vincularLista, observarLista, encontrarNaLista } from '../../scripts/services/minha-lista-api.js';
 import { iniciarAutenticacao } from '../../components/autenticacao/google-login.js';
 import { buscarSeries, buscarFilmes, buscarEpisodios } from '../../scripts/services/catalogo-api.js';
@@ -79,6 +79,7 @@ async function abrirDetalhes(item) {
     }));
     const salvo = encontrarNaLista(item);
     const alvo = salvo?.atual?.temporada ?? episodios.find(ep => !salvo?.vistos.includes(ep.id))?.season;
+    conteudo.append(criarLegendaEpisodios());
     const temporadas = new Map();
     for (const episodio of episodios) {
       const temporada = episodio.season ?? 0;

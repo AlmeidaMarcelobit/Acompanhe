@@ -1,3 +1,4 @@
+import { criarIcone } from '../icones/icone.js';
 import { episodiosDisponiveis } from '../../utils/progresso.mjs';
 import { elemento } from '../../utils/texto.js';
 import { criarCard } from '../catalogo/card.js';
@@ -77,26 +78,37 @@ export function criarEditorLista(item) {
 export function criarControleEpisodio(item, episodio) {
   const ep = { id: episodio.id, temporada: episodio.season ?? 0, numero: episodio.number ?? null, nome: episodio.name || 'Título não informado' };
   const controles = elemento('div', undefined, 'episodio-acoes');
-  const label = elemento('label', undefined, 'episodio-visto');
-  const check = elemento('input'); check.type = 'checkbox'; check.setAttribute('aria-label', `Já vi ${nomeEpisodio(ep)}`);
-  label.append(check, elemento('span', 'Já vi'));
-  const atual = elemento('button', 'Estou neste'); atual.type = 'button'; atual.setAttribute('aria-label', `Estou em ${nomeEpisodio(ep)}`);
-  controles.append(label, atual);
-  check.addEventListener('change', () => atualizarMinhaLista({ action: 'episodio', item, episodio: ep, visto: check.checked }));
-  atual.addEventListener('click', () => atualizarMinhaLista({ action: 'atual', item, episodio: ep }));
+  const olho = elemento('button', undefined, 'episodio-icone episodio-olho'); olho.type = 'button';
+  olho.append(criarIcone('olho'));
+  const bandeira = elemento('button', undefined, 'episodio-icone episodio-bandeira'); bandeira.type = 'button';
+  bandeira.append(criarIcone('bandeira'));
+  controles.append(olho, bandeira);
+  olho.addEventListener('click', () => atualizarMinhaLista({ action: 'episodio', item, episodio: ep, visto: !encontrarNaLista(item)?.vistos.includes(ep.id) }));
+  bandeira.addEventListener('click', () => {
+    if (encontrarNaLista(item)?.atual?.id !== ep.id) atualizarMinhaLista({ action: 'atual', item, episodio: ep });
+  });
   const parar = observarLista(estado => {
     const salvo = encontrarNaLista(item);
-    check.checked = Boolean(salvo?.vistos.includes(ep.id));
-    check.disabled = atual.disabled = !estado.usuario || !estado.pronto || estado.salvando;
-    atual.disabled ||= check.checked;
+    const visto = Boolean(salvo?.vistos.includes(ep.id));
     const selecionado = salvo?.atual?.id === ep.id;
-    atual.setAttribute('aria-pressed', String(selecionado));
-    atual.textContent = selecionado ? 'Episódio atual' : 'Estou neste';
-    label.classList.toggle('visto', check.checked);
+    olho.disabled = bandeira.disabled = !estado.usuario || !estado.pronto || estado.salvando;
+    bandeira.disabled ||= visto;
+    olho.setAttribute('aria-pressed', String(visto));
+    olho.title = visto ? 'Já visto — clique para desmarcar' : 'Marcar como visto';
+    olho.setAttribute('aria-label', `${visto ? 'Desmarcar como visto' : 'Marcar como visto'}: ${nomeEpisodio(ep)}`);
+    bandeira.setAttribute('aria-pressed', String(selecionado));
+    bandeira.title = selecionado ? 'Você está neste episódio' : visto ? 'Desmarque como visto para definir como atual' : 'Estou neste episódio';
+    bandeira.setAttribute('aria-label', `${selecionado ? 'Episódio atual' : 'Definir episódio atual'}: ${nomeEpisodio(ep)}`);
   });
   return { controles, parar };
 }
-
+export function criarLegendaEpisodios() {
+  const legenda = elemento('p', undefined, 'legenda-episodios');
+  for (const [nome, texto] of [['olho', 'Já visto'], ['bandeira', 'Episódio atual']]) {
+    const item = elemento('span'); item.append(criarIcone(nome), document.createTextNode(texto)); legenda.append(item);
+  }
+  return legenda;
+}
 export function criarControleTemporada(item, numero, episodios) {
   const area = elemento('div', undefined, 'temporada-acoes');
   const botao = elemento('button'); botao.type = 'button';
