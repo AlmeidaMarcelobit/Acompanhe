@@ -53,7 +53,7 @@ Qualquer pessoa pode entrar com a própria conta Google após habilitar o aplica
 
 A interface fica em `src/components/autenticacao/google-login.js`, o acesso ao backend em `src/scripts/services/autenticacao-api.js`, e a sessão em `api/auth/session.php`. A biblioteca `firebase/php-jwt` valida a assinatura RS256 usando os certificados HTTPS do Google; o backend verifica público, emissor, validade e nonce. Certificados são armazenados na sessão respeitando o max-age informado pelo Google. O backend também verifica nonce e CSRF e renova o identificador da sessão ao entrar e sair. Tokens do Google não são guardados no navegador. A sessão usa cookie HttpOnly/SameSite e dura até duas horas ou até expirar a sessão do navegador. Use HTTPS em produção.
 
-Sem Client ID configurado, o catálogo permanece disponível e a área da conta informa que o login estará disponível em breve. Nome e email aparecem após entrar; não há banco de usuários ou sincronização de listas nesta etapa. Sair encerra a sessão no Acompanhe, sem desconectar a conta Google do navegador.
+Sem Client ID configurado, o catálogo permanece disponível e a área da conta informa que o login estará disponível em breve. Nome e email aparecem após entrar; a lista e os episódios são vinculados ao identificador da conta Google. Sair encerra a sessão no Acompanhe, sem desconectar a conta Google do navegador.
 
 Referências: [configuração do Google Identity Services](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid) e [validação no servidor](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token).
 
@@ -71,7 +71,7 @@ O Netlify usa `netlify/functions/session.mjs` para autenticação. A API PHP con
 4. Publique pelo repositório conectado ao Netlify, usando o `netlify.toml`: build `npm run build`, diretório público `dist`, functions `netlify/functions`. Depois de mudar variáveis de ambiente, faça novo deploy. Um upload manual apenas de HTML/CSS não instala a Function.
 5. Acesse o site e teste o botão de login com sua conta. Para testar localmente a versão Netlify, use Netlify Dev com as mesmas variáveis configuradas. Para conferir código: `npm ci`, `npm test`, `npm run build`.
 
-O build copia apenas index.html e src/ para dist, evitando publicar arquivos PHP, configuração local, dependências e testes como conteúdo estático. A Function verifica o ID token pela biblioteca oficial google-auth-library e usa cookie de sessão assinado, HttpOnly, Secure e SameSite, com expiração de duas horas. O cookie contém os dados básicos do perfil, sem tokens Google. O logout substitui o cookie neste navegador; não existe revogação centralizada de cópias do cookie antes da expiração. A chave SESSION_SECRET deve ser estável entre deploys; trocá-la invalida todas as sessões existentes. Não há banco de usuários nesta etapa.
+O build copia apenas index.html e src/ para dist, evitando publicar arquivos PHP, configuração local, dependências e testes como conteúdo estático. A Function verifica o ID token pela biblioteca oficial google-auth-library e usa cookie de sessão assinado, HttpOnly, Secure e SameSite, com expiração de duas horas. O cookie contém os dados básicos do perfil, sem tokens Google. O logout substitui o cookie neste navegador; não existe revogação centralizada de cópias do cookie antes da expiração. A chave SESSION_SECRET deve ser estável entre deploys; trocá-la invalida todas as sessões existentes. Os perfis não têm uma tabela própria; o progresso de Minha Lista é armazenado separadamente por conta.
 
 ### Credenciais e material do laboratório
 
@@ -84,3 +84,17 @@ O restante do material do laboratório, incluindo dependências, build e testes 
 ## Histórico do projeto
 
 Veja a [revisão do histórico Git](docs/historico-git.md) para a avaliação de cada commit original e a sequência reorganizada.
+
+## Minha Lista e progresso dos episódios
+
+Entre com Google, abra um filme ou série no catálogo, escolha **Quero assistir**, **Assistindo** ou **Concluído** e clique em **Adicionar à minha lista**. A aba Minha Lista permite filtrar por situação e reabrir os detalhes. A situação pode ser alterada no seletor e o título pode ser removido junto com o progresso salvo.
+
+Nas séries, cada episódio tem **Já vi** e **Estou neste**. Marcar um episódio inicia a série em Assistindo; o episódio atual é exibido no card e nos detalhes. Ao marcar o atual como visto, a sugestão passa ao próximo episódio regular ainda não visto e já disponível segundo a fonte. Desmarcar um episódio de uma série concluída volta a situação para Assistindo. A situação Concluído é escolhida manualmente, limpa a indicação do episódio atual e não marca episódios em lote. Especiais podem ser marcados individualmente. A lista aceita até 500 títulos por conta.
+
+- **Netlify:** `netlify/functions/minha-lista.mjs` grava no Netlify Blobs, no store `acompanhe-listas`, separado por identificador de conta. Usa consistência forte e gravação condicional com reaplicação da operação quando outro acesso grava ao mesmo tempo. Dados sobrevivem a novos deploys e podem ser recuperados em outro dispositivo ao entrar com a mesma conta, dentro do mesmo site Netlify.
+- **XAMPP:** `api/lista/index.php` grava em SQLite em `api/lista/dados/listas.sqlite`. PHP precisa de PDO SQLite e permissão de escrita nessa pasta. O arquivo de dados é ignorado pelo Git e protegido pelo `.htaccess` no Apache. O banco local e o armazenamento Netlify são ambientes separados; não existe migração automática entre eles.
+- **Interface:** `src/components/minha-lista/` contém os controles; `src/scripts/services/minha-lista-api.js` consulta a API. O catálogo pode ser visto sem login; gravações exigem sessão e CSRF. Sair limpa a lista carregada na tela, sem apagar os dados salvos. Erros de gravação são exibidos sem confirmar sucesso.
+
+O `netlify.toml` encaminha `/api/lista/index.php` para a Function, mantendo a mesma URL de API para os dois ambientes. A biblioteca `@netlify/blobs` é instalada pelo npm; em Functions publicadas, a conexão usa o contexto do próprio site. Não é necessário adicionar outra chave de armazenamento ao frontend. Faça novo deploy para disponibilizar esta função; os testes locais não substituem a conferência do armazenamento no site publicado.
+
+Validação: `npm test` executa testes de login e lista, incluindo persistência entre sessões, isolamento entre contas, gravações concorrentes e falha de armazenamento. `C:/xampp/php/php.exe tests/minha-lista.php` verifica as regras equivalentes no PHP. A interface também foi conferida em sessão isolada de desenvolvimento, sem alterar contas Google reais.

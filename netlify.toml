@@ -14,3 +14,9 @@
   to = "/.netlify/functions/session"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/api/lista/index.php"
+  to = "/.netlify/functions/minha-lista"
+  status = 200
+  force = true

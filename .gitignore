@@ -4,3 +4,4 @@
 !/.env.example
 /api/auth/config.local.php
 /netlify/lib/lab-config.mjs
+/api/lista/dados/*.sqlite*

@@ -63,3 +63,9 @@ export function createHandler({ secret, clientId = defaultClientId, verify = asy
   };
 }
 export default request => createHandler({ secret: process.env.SESSION_SECRET, clientId: process.env.GOOGLE_CLIENT_ID || defaultClientId })(request);
+
+export function obterSessao(request, secret) {
+  if (!secret || Buffer.byteLength(secret) < 32) return null;
+  const raw = (request.headers.get('cookie') || '').split(';').map(v => v.trim()).find(v => v.startsWith(`${cookieName}=`))?.slice(cookieName.length + 1);
+  return decode(raw, secret);
+}
