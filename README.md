@@ -48,7 +48,7 @@ Qualquer pessoa pode entrar com a própria conta Google após habilitar o aplica
 
 1. No [Google Cloud / Google Auth Platform](https://console.cloud.google.com/auth/overview), crie ou selecione um projeto e configure Branding (nome e email de suporte) e Audience. Para permitir contas Google pessoais, escolha público externo. Durante testes, cadastre os usuários de teste; para disponibilizar ao público, publique o aplicativo e cumpra os requisitos exibidos pelo Google.
 2. Em Clients, crie um cliente OAuth do tipo Aplicativo da Web. Em Origens JavaScript autorizadas, adicione `http://localhost` (sem `/Acompanhe`). Se usar outra porta, registre a origem com essa porta. Em produção, registre a origem HTTPS real. O fluxo usa popup e callback JavaScript, sem URI de redirecionamento.
-3. Copie `api/auth/config.example.php` para `api/auth/config.local.php` e preencha `google_client_id` com o Client ID terminado em `.apps.googleusercontent.com`. Alternativamente, defina a variável `GOOGLE_CLIENT_ID` no ambiente do Apache. O arquivo local é ignorado pelo Git.
+3. Copie `api/auth/config.example.php` para `api/auth/config.local.php` e preencha `google_client_id` com o Client ID terminado em `.apps.googleusercontent.com`. Alternativamente, defina a variável `GOOGLE_CLIENT_ID` no ambiente do Apache. O arquivo local contém os valores reais e é ignorado pelo Git.
 4. As dependências PHP são instaladas com `composer install` (ou `C:/xampp/php/php.exe tools/composer.phar install` se o Composer local estiver disponível). Reinicie o Apache se alterar variáveis de ambiente e abra `http://localhost/Acompanhe/`.
 
 A interface fica em `src/components/autenticacao/google-login.js`, o acesso ao backend em `src/scripts/services/autenticacao-api.js`, e a sessão em `api/auth/session.php`. A biblioteca `firebase/php-jwt` valida a assinatura RS256 usando os certificados HTTPS do Google; o backend verifica público, emissor, validade e nonce. Certificados são armazenados na sessão respeitando o max-age informado pelo Google. O backend também verifica nonce e CSRF e renova o identificador da sessão ao entrar e sair. Tokens do Google não são guardados no navegador. A sessão usa cookie HttpOnly/SameSite e dura até duas horas ou até expirar a sessão do navegador. Use HTTPS em produção.
@@ -60,3 +60,23 @@ Referências: [configuração do Google Identity Services](https://developers.go
 ### Verificação
 
 `C:/xampp/php/php.exe tests/google-token.php` testa token válido e rejeição de audiência, emissor, expiração, nonce, sujeito, algoritmo e assinatura incorretos. No Windows/XAMPP, se a geração da chave de teste falhar, defina `OPENSSL_CONF=C:/xampp/apache/conf/openssl.cnf` no ambiente do terminal. O PHP precisa ter cURL, OpenSSL e um diretório de sessões gravável. As dependências estão fixadas em composer.lock.
+
+## Publicar no Netlify — capte.netlify.app
+
+O Netlify usa `netlify/functions/session.mjs` para autenticação. A API PHP continua sendo usada no XAMPP. O endereço da API é o mesmo: o netlify.toml redireciona a consulta PHP para a Function no deploy.
+
+1. No Google Auth Platform, abra o cliente OAuth do Acompanhe e adicione `https://capte.netlify.app` às **Origens JavaScript autorizadas** (sem barra final ou caminho). Mantenha `http://localhost` se continuar usando XAMPP. Para liberar contas pessoais ao público, configure público externo e publique o aplicativo; no modo de testes, apenas usuários de teste autorizados podem entrar.
+2. Nas variáveis de ambiente do site no Netlify, configure `SESSION_SECRET` com o valor real definido para o laboratório, com pelo menos 32 bytes, no escopo Functions. Gere com `node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"`. A autenticação Google não exige Client Secret. Não coloque os valores reais no Git.
+3. Configure `GOOGLE_CLIENT_ID` no escopo Functions com o Client ID real do laboratório. Nenhum Client Secret Google é utilizado.
+4. Publique pelo repositório conectado ao Netlify, usando o `netlify.toml`: build `npm run build`, diretório público `dist`, functions `netlify/functions`. Depois de mudar variáveis de ambiente, faça novo deploy. Um upload manual apenas de HTML/CSS não instala a Function.
+5. Acesse o site e teste o botão de login com sua conta. Para testar localmente a versão Netlify, use Netlify Dev com as mesmas variáveis configuradas. Para conferir código: `npm ci`, `npm test`, `npm run build`.
+
+O build copia apenas index.html e src/ para dist, evitando publicar arquivos PHP, configuração local, dependências e testes como conteúdo estático. A Function verifica o ID token pela biblioteca oficial google-auth-library e usa cookie de sessão assinado, HttpOnly, Secure e SameSite, com expiração de duas horas. O cookie contém os dados básicos do perfil, sem tokens Google. O logout substitui o cookie neste navegador; não existe revogação centralizada de cópias do cookie antes da expiração. A chave SESSION_SECRET deve ser estável entre deploys; trocá-la invalida todas as sessões existentes. Não há banco de usuários nesta etapa.
+
+### Credenciais e material do laboratório
+
+Os valores reais permanecem em .env e api/auth/config.local.php no computador de desenvolvimento. A configuração antiga netlify/lib/lab-config.mjs também foi retirada do versionamento e não é mais importada pela Function. Nenhum valor real é substituído por credencial fictícia. O .env.example documenta apenas os nomes das variáveis, sem valores.
+
+Para o site publicado, cadastre GOOGLE_CLIENT_ID e SESSION_SECRET nas variáveis do Netlify, no escopo Functions, usando os valores reais do .env local. O arquivo .env não é enviado pelo Git e não configura automaticamente o ambiente remoto. Faça um novo deploy depois de configurar essas variáveis. A origem https://capte.netlify.app deve estar autorizada no Google Cloud.
+
+O restante do material do laboratório, incluindo dependências, build e testes já incluídos, permanece no repositório. O deploy continua publicando apenas dist e a Function.

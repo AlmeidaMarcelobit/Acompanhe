@@ -1,0 +1,29 @@
+{
+  "name": "acompanhe",
+  "version": "1.0.0",
+  "description": "Catálogo de filmes e séries com HTML, CSS e JavaScript, sem build. A página inicial busca títulos em APIs e exibe episódios agrupados por temporada.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "test": "node tests/netlify-auth.test.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlmeidaMarcelobit/Acompanhe.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AlmeidaMarcelobit/Acompanhe/issues"
+  },
+  "homepage": "https://github.com/AlmeidaMarcelobit/Acompanhe#readme",
+  "dependencies": {
+    "google-auth-library": "^11.3.3"
+  },
+  "private": true
+}
