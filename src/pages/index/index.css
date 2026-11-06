@@ -1,0 +1,41 @@
+figure {
+  width: 125px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border-radius: 12px;
+  overflow: hidden;
+  text-align: center;
+  cursor: pointer;
+}
+
+figure a {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+figure a figcaption {
+  flex: 1;
+}
+
+figure img {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+  padding: 5px;
+  box-sizing: border-box;
+  color: azure;
+  background-color: crimson;
+}
