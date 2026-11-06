@@ -5,14 +5,14 @@ $serie = ['id' => 10, 'tipo' => 'series', 'nome' => 'Série de teste'];
 $filme = ['id' => 10, 'tipo' => 'filmes', 'nome' => 'Filme de teste'];
 $ep = ['id' => 101, 'temporada' => 1, 'numero' => 1, 'nome' => 'Primeiro'];
 $doc = atualizarLista([], ['action' => 'salvar', 'item' => $serie, 'status' => 'quero']);
-$doc = atualizarLista($doc, ['action' => 'salvar', 'item' => $filme, 'status' => 'concluido']);
+$doc = atualizarLista($doc, ['action' => 'salvar', 'item' => $filme, 'status' => 'concluido', 'episodios' => [101, 102, 201, 202]]);
 conferir(count($doc['itens']) === 2, 'Tipos com o mesmo ID foram confundidos.');
 $doc = atualizarLista($doc, ['action' => 'atual', 'item' => $serie, 'episodio' => $ep]);
 conferir($doc['itens']['series:10']['atual']['id'] === 101, 'Episódio atual incorreto.');
 foreach ([true, true] as $visto) $doc = atualizarLista($doc, ['action' => 'episodio', 'item' => $serie, 'episodio' => $ep, 'visto' => $visto]);
 conferir($doc['itens']['series:10']['vistos'] === [101], 'Episódios duplicados.');
 conferir($doc['itens']['series:10']['atual'] === null, 'Episódio visto ainda está como atual.');
-$doc = atualizarLista($doc, ['action' => 'status', 'chave' => 'series:10', 'status' => 'concluido']);
+$doc = atualizarLista($doc, ['action' => 'status', 'chave' => 'series:10', 'status' => 'concluido', 'episodios' => [101, 102, 201, 202]]);
 $doc = atualizarLista($doc, ['action' => 'episodio', 'item' => $serie, 'episodio' => $ep, 'visto' => false]);
 conferir($doc['itens']['series:10']['status'] === 'assistindo', 'Desmarcar episódio não retomou a série.');
 $doc = atualizarLista($doc, ['action' => 'remover', 'chave' => 'series:10']);
@@ -47,8 +47,10 @@ $doc = atualizarLista([], ['action' => 'episodio', 'item' => $antiga, 'episodio'
 $doc = atualizarLista($doc, ['action' => 'salvar', 'item' => $nova]);
 conferir($doc['itens']['series:100']['vistos'] === [101], 'A integração TMDB sobrescreveu o legado.');
 conferir($doc['itens']['tmdb:series:100']['fonte'] === 'tmdb', 'Fonte TMDB não persistida.');
-$doc = atualizarLista($doc, ['action' => 'status', 'chave' => 'tmdb:series:100', 'status' => 'concluido']);
+$doc = atualizarLista($doc, ['action' => 'status', 'chave' => 'tmdb:series:100', 'status' => 'concluido', 'episodios' => [101, 102, 201, 202]]);
 conferir($doc['itens']['series:100']['status'] === 'assistindo', 'Status TMDB afetou título legado.');
 $doc = atualizarLista($doc, ['action' => 'remover', 'chave' => 'tmdb:series:100']);
 conferir(isset($doc['itens']['series:100']), 'Remoção TMDB afetou legado.');
 echo "OK: preservação do progresso legado e isolamento entre fontes PHP.\n";
+
+conferir($doc['itens']['series:100']['vistos'] === [101], 'Conclusão alterou outra fonte.');

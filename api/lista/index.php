@@ -8,9 +8,9 @@ if (!in_array($method, ['GET', 'POST'], true)) responder(405, ['error' => 'Méto
 $operacao = null;
 if ($method === 'POST') {
     if (!hash_equals($_SESSION['csrf'], $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')) responder(403, ['error' => 'Sessão inválida. Recarregue a página.']);
-    if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 24000) responder(413, ['error' => 'Requisição muito grande.']);
+    if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 256000) responder(413, ['error' => 'Requisição muito grande.']);
     $texto = file_get_contents('php://input', false, null, 0, 24001);
-    if (strlen($texto) > 24000) responder(413, ['error' => 'Requisição muito grande.']);
+    if (strlen($texto) > 256000) responder(413, ['error' => 'Requisição muito grande.']);
     $operacao = json_decode($texto, true);
     if (!is_array($operacao)) responder(400, ['error' => 'Requisição inválida.']);
 }

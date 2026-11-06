@@ -1,4 +1,4 @@
-import { iniciarMinhaLista, criarEditorLista, criarControleEpisodio, criarControleTemporada, criarLegendaEpisodios, nomeEpisodio } from '../../components/minha-lista/minha-lista.js';
+import { iniciarMinhaLista, criarCabecalhoTemporada, criarEditorLista, criarControleEpisodio, criarControleTemporada, criarLegendaEpisodios, nomeEpisodio } from '../../components/minha-lista/minha-lista.js';
 import { vincularLista, observarLista, encontrarNaLista } from '../../scripts/services/minha-lista-api.js';
 import { iniciarAutenticacao } from '../../components/autenticacao/google-login.js';
 import { buscarSeries, buscarFilmes, buscarEpisodios, buscarTemporadas } from '../../scripts/services/catalogo-api.js';
@@ -104,7 +104,10 @@ async function abrirDetalhes(item) {
         ul.append(li);
       }
       grupo.append(ul);
-      conteudo.append(grupo);
+      const cabecalho = criarCabecalhoTemporada(item, numero, grupo, async () => lista);
+      cabecalho.atualizar(lista);
+      pararObservadores.push(cabecalho.parar);
+      conteudo.append(cabecalho.area);
     }
   } catch {
     if (detalhes !== atual || !dialog.open) return;
@@ -163,12 +166,17 @@ async function carregarTemporadasTmdb(item, mensagem, atual) {
     grupo.append(elemento('summary', `${numero === 0 ? 'Especiais' : `Temporada ${numero}`} · ${temporada.episode_count} episódios`));
     const area = elemento('div'); grupo.append(area);
     let carregando = false, pronto = false;
+    let consultaEpisodios;
+    const obterEpisodios = () => consultaEpisodios ||= buscarEpisodios(item, atual.signal, numero).catch(erro => { consultaEpisodios = null; throw erro; });
+    const cabecalho = criarCabecalhoTemporada(item, numero, grupo, obterEpisodios);
+    pararObservadores.push(cabecalho.parar);
     async function carregar() {
       if (pronto || carregando || detalhes !== atual || !dialog.open) return;
       carregando = true;
       const aviso = elemento('p', 'Carregando episódios…', 'sinopse'); aviso.setAttribute('role', 'status'); area.replaceChildren(aviso);
       try {
-        const episodios = await buscarEpisodios(item, atual.signal, numero);
+        const episodios = await obterEpisodios();
+        cabecalho.atualizar(episodios);
         if (detalhes !== atual || !dialog.open) return;
         area.replaceChildren();
         if (!episodios.length) area.append(elemento('p', 'Nenhum episódio cadastrado nesta temporada.', 'sinopse'));
@@ -192,7 +200,7 @@ async function carregarTemporadasTmdb(item, mensagem, atual) {
       } finally { carregando = false; }
     }
     grupo.addEventListener('toggle', () => { if (grupo.open) carregar(); });
-    conteudo.append(grupo);
+    conteudo.append(cabecalho.area);
     grupo.open = numero === alvo;
     if (grupo.open) carregar();
   }

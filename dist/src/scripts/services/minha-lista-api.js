@@ -1,5 +1,6 @@
 import { chaveCatalogo } from '../../utils/catalogo.mjs';
 import { consultarSessao } from './autenticacao-api.js';
+import { buscarTodosEpisodios } from './catalogo-api.js';
 const endpoint = new URL('../../../api/lista/index.php', import.meta.url);
 const ouvintes = new Set();
 let estado = { usuario: null, itens: [], carregando: false, salvando: false, pronto: false, erro: '' };
@@ -36,6 +37,12 @@ export async function atualizarMinhaLista(operacao) {
   const atual = geracao;
   publicar({ salvando: true, erro: '' });
   try {
+    const item = operacao.item || estado.itens.find(item => chaveLista(item) === operacao.chave);
+    if (item?.tipo === 'series' && ['salvar', 'status'].includes(operacao.action) && operacao.status === 'concluido') {
+      const episodios = await buscarTodosEpisodios(item, AbortSignal.timeout(120000));
+      operacao = { ...operacao, episodios: [...new Set(episodios.map(ep => ep.id))] };
+    }
+    if (atual !== geracao) return false;
     const dados = await requisitar({ method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify(operacao) });
     if (atual !== geracao) return false;
     publicar({ itens: dados.itens });

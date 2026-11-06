@@ -13,8 +13,8 @@ export function criarHandlerLista({ secret, armazenamento = () => getStore({ nam
     if (request.method === 'POST' && (request.headers.get('origin') !== new URL(request.url).origin || !mesmo(request.headers.get('x-csrf-token'), sessao.csrf))) return responder(403, { error: 'Sessão inválida. Recarregue a página.' });
     let operacao;
     if (request.method === 'POST') {
-      if (Number(request.headers.get('content-length')) > 24000) return responder(413, { error: 'Requisição muito grande.' });
-      try { const text = await request.text(); if (Buffer.byteLength(text) > 24000) return responder(413, { error: 'Requisição muito grande.' }); operacao = JSON.parse(text); }
+      if (Number(request.headers.get('content-length')) > 256000) return responder(413, { error: 'Requisição muito grande.' });
+      try { const text = await request.text(); if (Buffer.byteLength(text) > 256000) return responder(413, { error: 'Requisição muito grande.' }); operacao = JSON.parse(text); }
       catch { return responder(400, { error: 'Requisição inválida.' }); }
     }
     try {

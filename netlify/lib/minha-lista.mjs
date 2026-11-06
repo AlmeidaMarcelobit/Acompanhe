@@ -31,7 +31,15 @@ export function atualizarLista(documento, operacao) {
     const status = operacao.status ?? item.status;
     if (typeof status !== 'string' || !Object.hasOwn(situacoes, status)) throw new Error('Situação inválida.');
     item.status = status;
-    if (status === 'concluido') item.atual = null;
+    if (status === 'concluido') {
+      if (item.tipo === 'series') {
+        const ids = operacao.episodios;
+        if (!Array.isArray(ids) || ids.length > 20000 || ids.some(id => !valido(id))) throw new Error('Lista completa de episódios obrigatória.');
+        item.vistos = [...new Set([...item.vistos, ...ids])];
+        if (item.vistos.length > 20000) throw new Error('Limite de episódios atingido.');
+      }
+      item.atual = null;
+    }
   } else {
     if (item.tipo !== 'series') throw new Error('Filmes não possuem episódios.');
     const vistos = new Set(item.vistos);

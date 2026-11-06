@@ -47,3 +47,17 @@ export async function buscarEpisodios(item, signal, temporada) {
   const dados = await consultarTmdb({ acao: 'episodios', id: String(item.id), temporada: String(temporada) }, signal);
   return (dados.episodes || []).map(normalizarEpisodioTmdb);
 }
+
+export async function buscarTodosEpisodios(item, signal) {
+  if (item.fonte !== 'tmdb') return buscarEpisodios(item, signal);
+  const temporadas = await buscarTemporadas(item, signal);
+  const resultado = [];
+  let indice = 0;
+  await Promise.all(Array.from({ length: Math.min(4, temporadas.length) }, async () => {
+    while (indice < temporadas.length) {
+      const temporada = temporadas[indice++];
+      resultado.push(...await buscarEpisodios(item, signal, temporada.season_number));
+    }
+  }));
+  return resultado;
+}

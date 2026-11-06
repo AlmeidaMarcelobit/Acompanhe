@@ -18,7 +18,7 @@ test('lista guarda situações, episódios, episódio atual e filmes sem confund
   assert.deepEqual(doc.itens['series:10'].vistos, [101]);
   assert.equal(doc.itens['series:10'].atual, null);
   doc = atualizarLista(doc, { action: 'atual', item: serie, episodio: { ...ep, id: 102 } });
-  doc = atualizarLista(doc, { action: 'status', chave: 'series:10', status: 'concluido' });
+  doc = atualizarLista(doc, { action: 'status', chave: 'series:10', status: 'concluido', episodios: doc.itens['series:10'].vistos });
   assert.equal(doc.itens['series:10'].atual, null);
   doc = atualizarLista(doc, { action: 'episodio', item: serie, episodio: ep, visto: false });
   assert.equal(doc.itens['series:10'].status, 'assistindo');
@@ -99,7 +99,7 @@ test('temporada marca em lote sem duplicar e mantém outras temporadas', () => {
   assert.equal(doc.itens['series:10'].atual, null);
   doc = atualizarLista(doc, { action: 'episodio', item: serie, episodio: { ...ep, id: 102 }, visto: false });
   assert.deepEqual(doc.itens['series:10'].vistos.sort(), [101, 103, 201]);
-  doc = atualizarLista(doc, { action: 'status', chave: 'series:10', status: 'concluido' });
+  doc = atualizarLista(doc, { action: 'status', chave: 'series:10', status: 'concluido', episodios: doc.itens['series:10'].vistos });
   doc = atualizarLista(doc, { ...op, visto: false });
   assert.deepEqual(doc.itens['series:10'].vistos, [201]);
   assert.equal(doc.itens['series:10'].status, 'assistindo');
@@ -126,4 +126,19 @@ test('temporada e episódio concorrentes preservam ambas as alterações', async
 test('marcação em lote exclui episódios com data futura', async () => {
   const { episodiosDisponiveis } = await import('../src/utils/progresso.mjs');
   assert.deepEqual(episodiosDisponiveis([{ id: 1, airdate: '2026-11-05' }, { id: 2, airdate: '2026-11-06' }, { id: 3, airdate: '2026-11-07' }, { id: 4, airdate: null }], '2026-11-06').map(ep => ep.id), [1, 2, 4]);
+});
+
+test('concluir série marca todas as temporadas e permite ajustar um episódio', () => {
+  const base = atualizarLista(null, {action:'atual', item:serie, episodio:ep});
+  const op = {action:'status', chave:'series:10', status:'concluido', episodios:[101,102,201,202,202]};
+  const concluido = atualizarLista(base, op);
+  assert.deepEqual(concluido.itens['series:10'].vistos, [101,102,201,202]);
+  assert.equal(concluido.itens['series:10'].atual, null);
+  assert.equal(concluido.itens['series:10'].status, 'concluido');
+  assert.deepEqual(atualizarLista(concluido,op).itens['series:10'].vistos,[101,102,201,202]);
+  for (const episodios of [undefined, [101,'202'], [0], Array(20001).fill(1)]) assert.throws(() => atualizarLista(base,{...op,episodios}));
+  assert.deepEqual(base.itens['series:10'].vistos,[]);
+  const ajuste=atualizarLista(concluido,{action:'episodio',item:serie,episodio:ep,visto:false});
+  assert.deepEqual(ajuste.itens['series:10'].vistos,[102,201,202]);
+  assert.equal(ajuste.itens['series:10'].status,'assistindo');
 });

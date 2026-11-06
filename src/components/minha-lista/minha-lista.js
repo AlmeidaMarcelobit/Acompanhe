@@ -109,6 +109,53 @@ export function criarLegendaEpisodios() {
   }
   return legenda;
 }
+export function criarCabecalhoTemporada(item, numero, grupo, carregar) {
+  const area = elemento('div', undefined, 'temporada-bloco');
+  const controles = elemento('div', undefined, 'temporada-icones episodio-acoes');
+  const olho = elemento('button', undefined, 'episodio-icone episodio-olho');
+  const bandeira = elemento('button', undefined, 'episodio-icone episodio-bandeira');
+  olho.type = bandeira.type = 'button';
+  olho.append(criarIcone('olho')); bandeira.append(criarIcone('bandeira'));
+  controles.append(olho, bandeira);
+  const aviso = elemento('p', '', 'mensagem-lista'); aviso.setAttribute('role', 'status'); aviso.hidden = true;
+  area.append(grupo, controles, aviso);
+  let episodios, ocupado = false, ultimo;
+  function render(estado) {
+    ultimo = estado;
+    const salvo = encontrarNaLista(item);
+    const ids = episodiosDisponiveis(episodios || []).map(ep => ep.id);
+    const todos = ids.length ? ids.every(id => salvo?.vistos.includes(id)) : !episodios && salvo?.status === 'concluido';
+    olho.setAttribute('aria-pressed', String(Boolean(todos)));
+    olho.title = olho.ariaLabel = `${todos ? 'Desmarcar' : 'Marcar'} temporada ${numero} como vista`;
+    bandeira.setAttribute('aria-pressed', String(salvo?.atual?.temporada === numero));
+    bandeira.title = bandeira.ariaLabel = `Continuar no primeiro episódio não visto da temporada ${numero}`;
+    olho.disabled = bandeira.disabled = ocupado || !estado.usuario || !estado.pronto || estado.salvando;
+  }
+  async function executar(atual) {
+    const usuario = ultimo.usuario;
+    ocupado = true; render(ultimo); aviso.hidden = true;
+    try {
+      episodios = await carregar();
+      if (ultimo.usuario !== usuario) return;
+      const disponiveis = episodiosDisponiveis(episodios);
+      const salvo = encontrarNaLista(item);
+      if (atual) {
+        const ep = disponiveis.find(ep => !salvo?.vistos.includes(ep.id));
+        if (!ep) throw new Error('Todos os episódios disponíveis desta temporada já foram vistos.');
+        await atualizarMinhaLista({ action: 'atual', item, episodio: { id: ep.id, temporada: numero, numero: ep.number ?? null, nome: ep.name } });
+      } else {
+        if (!disponiveis.length) throw new Error('Nenhum episódio disponível nesta temporada.');
+        const ids = disponiveis.map(ep => ep.id);
+        await atualizarMinhaLista({ action: 'temporada', item, temporada: numero, episodios: ids, visto: !ids.every(id => salvo?.vistos.includes(id)) });
+      }
+    } catch (erro) { aviso.textContent = erro.message; aviso.hidden = false; }
+    finally { ocupado = false; render(ultimo); }
+  }
+  olho.addEventListener('click', () => executar(false));
+  bandeira.addEventListener('click', () => executar(true));
+  const parar = observarLista(render);
+  return { area, parar, atualizar(lista) { episodios = lista; render(ultimo); } };
+}
 export function criarControleTemporada(item, numero, episodios) {
   const area = elemento('div', undefined, 'temporada-acoes');
   const botao = elemento('button'); botao.type = 'button';

@@ -27,7 +27,16 @@ function atualizarLista(array $documento, array $operacao): array {
         $status = $operacao['status'] ?? $item['status'];
         if (!in_array($status, ['quero', 'assistindo', 'concluido'], true)) throw new InvalidArgumentException('Situação inválida.');
         $item['status'] = $status;
-        if ($status === 'concluido') $item['atual'] = null;
+        if ($status === 'concluido') {
+            if ($item['tipo'] === 'series') {
+                $ids = $operacao['episodios'] ?? null;
+                if (!is_array($ids) || count($ids) > 20000) throw new InvalidArgumentException('Lista completa de episódios obrigatória.');
+                foreach ($ids as $id) if (!is_int($id) || $id < 1) throw new InvalidArgumentException('Episódio inválido.');
+                $item['vistos'] = array_values(array_unique(array_merge($item['vistos'], $ids)));
+                if (count($item['vistos']) > 20000) throw new InvalidArgumentException('Limite de episódios atingido.');
+            }
+            $item['atual'] = null;
+        }
     } else {
         if ($item['tipo'] !== 'series') throw new InvalidArgumentException('Filmes não possuem episódios.');
         if ($action !== 'temporada') {
